@@ -10,6 +10,8 @@
 #include "sd.h"
 #include "main.h"
 
+u32 sd_found = 0;
+
 u8 config_bytes[no_config_bytes] ATTRIBUTE_ALIGN(32);
 
 void usb_flushnew(s32 chn);
@@ -28,9 +30,9 @@ void sd_refresh()
 {
 	s32 ret = 0;
 	u32 geckoidcheck;
-	
+
 	sd_shutdown();
-	
+
 	ret = sd_init();
 	if(ret){
 		sd_found = 1;
@@ -42,7 +44,7 @@ void sd_refresh()
 
 	// Check USB Gecko
 	gecko_attached = usb_isgeckoalive(EXI_CHANNEL_1);
-	if(gecko_attached){	
+	if(gecko_attached){
 		gecko_channel = 1;
 		if (EXI_GetID(gecko_channel, 0x80, &geckoidcheck) == 1)
 		{
@@ -60,11 +62,11 @@ void sd_refresh()
 		usb_flushnew(gecko_channel);
 		goto inslotb;
 	}
-	
+
 inslota:
-	
+
 	gecko_attached = usb_isgeckoalive(EXI_CHANNEL_0);
-	if(gecko_attached){	
+	if(gecko_attached){
 		gecko_channel = 0;
 		if (EXI_GetID(gecko_channel, 0x80, &geckoidcheck) == 1)
 		{
@@ -81,12 +83,12 @@ inslota:
 		}
 		usb_flushnew(gecko_channel);
 	}
-	
+
 inslotb:
 
 	VIDEO_WaitVSync();
 
-	if(!gecko_attached){	
+	if(!gecko_attached){
 		gecko_channel = 2;
 	}
 }
@@ -121,14 +123,14 @@ u32 sd_load_config()
 	char filepath[MAX_FILEPATH_LEN];
 	int ret = 0;
 	FILE *fp = NULL;
-	
+
 	// Set defaults, will get ovewritten if config.dat exists
 	config_bytes[0] = 0xCD;
 	config_bytes[1] = 0x00;
 	config_bytes[2] = 0x08;
 	config_bytes[3] = 0x00;
 	config_bytes[5] = 0x00;	// no paused start
-	config_bytes[6] = 0x00; // gecko slot b	
+	config_bytes[6] = 0x00; // gecko slot b
 	config_bytes[8] = 0x00;
 	config_bytes[9] = 0x00;
 	config_bytes[10] = 0x00;
@@ -143,10 +145,10 @@ u32 sd_load_config()
 		config_bytes[4] = 0x01;
 		config_bytes[7] = 0x00;
 	}
-	
+
 	if (sd_found == 0)
 		return 0;
-	
+
 	sprintf (filepath, "sd:/data/gecko/config.dat");
 	fp = fopen(filepath, "rb");
 	if (!fp){
@@ -175,7 +177,7 @@ u32 sd_save_config()
 {
 	char filepath[MAX_FILEPATH_LEN];
 	int ret;
-	
+
 	sprintf (filepath, "sd:/config.dat");
 	FILE *fp = fopen(filepath, "wb");
 	if (!fp){

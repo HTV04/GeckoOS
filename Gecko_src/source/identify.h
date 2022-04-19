@@ -9,11 +9,6 @@
 // Turn upper and lower into a full title ID
 #define TITLE_LOWER(x)		((u32)(x))
 
-// Boot index
-u16 bootindex;
-
-u32 bootid;
-
 // Function prototypes
 void codehandler_rebooter();
 void codehandler_channel();

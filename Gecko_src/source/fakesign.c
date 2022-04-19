@@ -122,7 +122,7 @@ int get_title_key(signed_blob *s_tik, u8 *key){
   memset(keyout, 0, sizeof keyout);
   memset(iv, 0, sizeof iv);
   memcpy(iv, &p_tik->titleid, sizeof p_tik->titleid);
-  
+
   retval = ES_Decrypt(ES_KEY_COMMON, iv, keyin, sizeof keyin, keyout);
   if (retval){
 	//  printf("ES_Decrypt returned %d\n", retval);
@@ -156,12 +156,12 @@ void decrypt_buffer(u16 index, u8 *source, u8 *dest, u32 len){
 u32 brute_tmd(tmd *p_tmd){
 //---------------------------------------------------------------------------------
   u16 fill;
-  
+
   for(fill=0; fill<65535; fill++) {
-    p_tmd->fill3=fill;
+    p_tmd->fill2=fill;
     sha1 hash;
     SHA1((u8 *)p_tmd, TMD_SIZE(p_tmd), hash);;
-  
+
     if (hash[0]==0) {
       return 1;
     }
@@ -174,12 +174,12 @@ u32 brute_tmd(tmd *p_tmd){
 u32 brute_tik(tik *p_tik){
 //---------------------------------------------------------------------------------
   u16 fill;
-  
+
   for(fill=0; fill<65535; fill++) {
     p_tik->padding=fill;
     sha1 hash;
     SHA1((u8 *)p_tik, sizeof(tik), hash);
-  
+
     if (hash[0]==0){
 		return 1;
 	}
@@ -188,7 +188,7 @@ u32 brute_tik(tik *p_tik){
   return 0;
 }
 
-//---------------------------------------------------------------------------------    
+//---------------------------------------------------------------------------------
 void forge_tmd(signed_blob *s_tmd){
 //---------------------------------------------------------------------------------
   zero_sig(s_tmd);

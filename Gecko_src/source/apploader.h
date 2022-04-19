@@ -62,7 +62,6 @@ extern int app_x_screen;
 extern int app_y_screen;
 extern char gameidbuffer[8];
 extern char filepath[MAX_FILEPATH_LEN];
-extern GXRModeObj *rmode;
 extern vu32 dvddone;
 extern u32 appentrypoint;
 extern dvddiskid *g_diskID;

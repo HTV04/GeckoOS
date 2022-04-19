@@ -73,7 +73,6 @@ int app_x_screen = 110*2;
 int app_y_screen;
 char gameidbuffer[8];
 char filepath[MAX_FILEPATH_LEN];
-GXRModeObj *rmode = NULL;
 vu32 dvddone = 0;
 u8 dvdios;
 u32 appentrypoint;
@@ -129,7 +128,7 @@ void app_apply_patch()
 void app_dopatch(char *filename)
 //---------------------------------------------------------------------------------
 {
-	
+
 	FILE* fp;
 	u32 ret, pathlen;
 	u32 filesize;
@@ -147,13 +146,13 @@ void app_dopatch(char *filename)
 
 	closedir(pdir);
 	fflush(stdout);
-	
+
 	sprintf(filepath, GECKOPATCHDIR "/%s.gpf", filename);
-	
+
 	fp = fopen(filepath, "rb");
 	if (!fp) {
 		sprintf(filepath, PATCHDIR "/%s.gpf", filename);
-		
+
 		fp = fopen(filepath, "rb");
 		if (!fp) {
 			app_thread_state = 10;	// Patch not found
@@ -168,7 +167,7 @@ void app_dopatch(char *filename)
     fseek(fp, 0, SEEK_SET);
 
 	ret = fread((void*)sdbuffer, 1, filesize, fp);
-	if(ret != filesize){	
+	if(ret != filesize){
 		fclose(fp);
 		app_thread_state = 11;	// Patch not found
 		channel_thread_state = 6;
@@ -185,17 +184,17 @@ void app_dopatch(char *filename)
 void app_copycodes(char *filename)
 //---------------------------------------------------------------------------------
 {
-	
+
 	if (config_bytes[2] == 0x00)
 	{
 		codes_state = 3;
 		return;
 	}
-	
+
 	FILE* fp;
 	u32 ret, pathlen;
 	u32 filesize;
-	
+
 	DIR* pdir = opendir ("/data/gecko/codes/");
 	if(pdir == NULL){
 		pdir = opendir ("/codes/");
@@ -204,47 +203,47 @@ void app_copycodes(char *filename)
 			return;
 		}
 	}
-	
+
 	closedir(pdir);
 	fflush(stdout);
-	
+
 	sprintf(filepath, GECKOCODEDIR "/%s.gct", filename);
-	
+
 	fp = fopen(filepath, "rb");
 	if (!fp) {
 		sprintf(filepath, CODEDIR "/%s.gct", filename);
-		
+
 		fp = fopen(filepath, "rb");
 		if (!fp) {
 			codes_state = 1;	// codes not found
 			return;
 		}
 	}
-	
+
 	fseek(fp, 0, SEEK_END);
     filesize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-	
+
 	codelistsize = filesize;
-	
+
 	if ((codelist + codelistsize) > codelistend)
 	{
 		fclose(fp);
 		codes_state = 4;
 		return;
 	}
-	
+
 	ret = fread((void*)tempcodelist, 1, filesize, fp);
-	if(ret != filesize){	
+	if(ret != filesize){
 		fclose(fp);
 		codelistsize = 0;
 		codes_state = 1;	// codes not found
 		return;
 	}
-	
+
 	fclose(fp);
 	DCFlushRange((void*)tempcodelist, filesize);
-	
+
 	codes_state = 2;
 }
 
@@ -260,32 +259,32 @@ void app_loadgameconfig(char *gameid)
 	u32 codeaddr, codeval, codeaddr2, codeval2, codeoffset;
 	u32 temp, tempoffset, hookset = 0;
 	char parsebuffer[18];
-	
+
 	if (config_bytes[2] == 8)
 		hookset = 1;
-	
+
 	memcpy(tempgameconf, defaultgameconfig, defaultgameconfig_size);
 	tempgameconf[defaultgameconfig_size] = '\n';
 	tempgameconfsize = defaultgameconfig_size + 1;
-	
+
 	if (sd_found == 1)
 	{
 		fp = fopen(GECKOGAMECONFIG, "rb");
-		
+
 		if (!fp) fp = fopen(GAMECONFIG, "rb");
-		
+
 		if (fp) {
 			fseek(fp, 0, SEEK_END);
 			filesize = ftell(fp);
 			fseek(fp, 0, SEEK_SET);
-			
+
 			ret = fread((void*)tempgameconf + tempgameconfsize, 1, filesize, fp);
 			fclose(fp);
 			if (ret == filesize)
 				tempgameconfsize += filesize;
 		}
 	}
-	
+
 	// Remove non-ASCII characters
 	numnonascii = 0;
 	for (i = 0; i < tempgameconfsize; i++)
@@ -296,10 +295,10 @@ void app_loadgameconfig(char *gameid)
 			tempgameconf[i-numnonascii] = tempgameconf[i];
 	}
 	tempgameconfsize -= numnonascii;
-	
+
 	*(tempgameconf + tempgameconfsize) = 0;
 	gameconf = (tempgameconf + tempgameconfsize) + (4 - (((u32) (tempgameconf + tempgameconfsize)) % 4));
-	
+
 	for (maxgameidmatch = 0; maxgameidmatch <= 6; maxgameidmatch++)
 	{
 		i = 0;
@@ -454,7 +453,7 @@ void app_loadgameconfig(char *gameid)
 							else
 								gameconfsize -= temp * 4 + 4;
 						}
-						
+
 					}
 					if (strncasecmp("hook", parsebuffer, strlen(parsebuffer)) == 0 && strlen(parsebuffer) == 4)
 					{
@@ -629,7 +628,7 @@ void app_loadgameconfig(char *gameid)
 			if (i != tempgameconfsize) while ((tempgameconf[i] != 10 && tempgameconf[i] != 13) && (i != 0)) i--;
 		}
 	}
-	
+
 	tempcodelist = ((u8 *) gameconf) + gameconfsize;
 }
 
@@ -638,7 +637,7 @@ void app_pokevalues()
 //---------------------------------------------------------------------------------
 {
 	u32 i, *codeaddr, *codeaddr2, *addrfound = NULL;
-	
+
 	if (gameconfsize != 0)
 	{
 		for (i = 0; i < (gameconfsize / 4); i++)
@@ -688,41 +687,41 @@ void app_pokevalues()
    title lister code; see the below notice */
 
 /*-------------------------------------------------------------
- 
+
  Copyright (C) 2008 bushing
- 
+
  This software is provided 'as-is', without any express or implied
  warranty.  In no event will the authors be held liable for any
  damages arising from the use of this software.
- 
+
  Permission is granted to anyone to use this software for any
  purpose, including commercial applications, and to alter it and
  redistribute it freely, subject to the following restrictions:
- 
+
  1.The origin of this software must not be misrepresented; you
  must not claim that you wrote the original software. If you use
  this software in a product, an acknowledgment in the product
  documentation would be appreciated but is not required.
- 
+
  2.Altered source versions must be plainly marked as such, and
  must not be misrepresented as being the original software.
- 
+
  3.This notice may not be removed or altered from any source
  distribution.
- 
+
  -------------------------------------------------------------*/
 
 char * display_tmd_info(const tmd *t) {
 	static char desc[256];
 	u32 kind = t->title_id >> 32;
 	u32 title_l = t->title_id & 0xFFFFFFFF;
-	
+
 	char title_ascii[5];
 	u32 i;
 	memcpy(title_ascii, &title_l, 4);
 	for (i=0; i<4; i++) title_ascii[i]=ascii(title_ascii[i]);
 	title_ascii[4]='\0';
-	
+
 	switch (kind) {
 		case 1: // IOS, MIOS, BC, System Menu
 			snprintf(desc, sizeof(desc), "Title=1-%x (", title_l);
@@ -734,26 +733,26 @@ char * display_tmd_info(const tmd *t) {
 			}
 			break;
 		case 0x10000: // TMD installed by running a disc
-			snprintf(desc, sizeof(desc), "Title=10000-%08x (savedata for '%s')", 
+			snprintf(desc, sizeof(desc), "Title=10000-%08x (savedata for '%s')",
 					 title_l, title_ascii); break;
 		case 0x10001: // Normal channels / VC
 			snprintf(desc, sizeof(desc), "Title=10001-%08x (downloaded channel '%s')",
 					 title_l, title_ascii); break;
 		case 0x10002: // "System channels" -- News, Weather, etc.
-			snprintf(desc, sizeof(desc), "Title=10002-%08x (system channel '%s')", 
+			snprintf(desc, sizeof(desc), "Title=10002-%08x (system channel '%s')",
 					 title_l, title_ascii); break;
 		case 0x10004: // "Hidden channels" -- WiiFit channel
 			snprintf(desc, sizeof(desc), "Title=10004-%08x (game channel '%s')",
 					 title_l, title_ascii); break;
 		case 0x10008: // "Hidden channels" -- EULA, rgnsel
-			snprintf(desc, sizeof(desc), "Title=10008-%08x (hidden? channel '%s')", 
+			snprintf(desc, sizeof(desc), "Title=10008-%08x (hidden? channel '%s')",
 					 title_l, title_ascii); break;
 		default:
 			printf("Unknown title type %x %08x\n", kind, title_l);
 			break;
 	}
-    
-	if (t->title_version) 
+
+	if (t->title_version)
 		snprintf(desc, sizeof(desc), "%s vers: %d.%d (%d)", desc, t->title_version >> 8, t->title_version & 0xFF,
 				 t->title_version);
 	if (t->sys_version)   snprintf(desc, sizeof(desc), "%s FW: IOS%llu ", desc, t->sys_version & 0xff);
@@ -773,7 +772,7 @@ static void app_writediag(void *app_init, void *app_main, void *app_final, void 
 	signed_blob *s_tmd;
 	u32 tmd_size;
 	u32 i;
-	
+
 	if (sd_found == 1)
 	{
 		fp = fopen(DIAGFILE, "w");
@@ -789,16 +788,16 @@ static void app_writediag(void *app_init, void *app_main, void *app_final, void 
 				fprintf(fp, "ES_GetNumTitles=%d, count=%08x\n", ret, count);
 				return;
 			}
-			
+
 			fprintf(fp, "Found %d titles\n", count);
-			
+
 			static u64 title_list[256] ATTRIBUTE_ALIGN(32);
 			ret = ES_GetTitles(title_list, count);
 			if (ret) {
 				fprintf(fp, "ES_GetTitles=%d\n", ret);
 				return;
 			}
-			
+
 			int i;
 			for (i=0; i < count; i++) {
 				ret = ES_GetStoredTMDSize(title_list[i], &tmd_size);
@@ -825,13 +824,13 @@ void set_default_vidmode()
 		case 0x46:		// F (french PAL)
 		case 0x58:		// PAL X euro
 		case 0x59:		// PAL Y euro
-			*(vu32*)0x800000CC = 1; 
+			*(vu32*)0x800000CC = 1;
 			rmode = &TVPal528IntDf;
 		break;
 
 		case 0x45:		// USA default
 		case 0x4A:		// JAP default
-			*(vu32*)0x800000CC = 0; 
+			*(vu32*)0x800000CC = 0;
 			rmode = &TVNtsc480IntDf;
 		break;
 	}
@@ -862,7 +861,7 @@ void process_config_vidmode()
 		break;
 	}
 
-	
+
 }
 
 //---------------------------------------------------------------------------------
@@ -886,7 +885,7 @@ void load_handler()
 					memcpy((void*)0x80001F5E, ((u8*) &codelist) + 2, 2);
 					DCFlushRange((void*)0x80001800,codehandlerslota_size);
 					break;
-					
+
 				case 1:	// slot B
 					memset((void*)0x80001800,0,codehandler_size);
 					memcpy((void*)0x80001800,codehandler,codehandler_size);
@@ -898,7 +897,7 @@ void load_handler()
 					memcpy((void*)0x80001F5E, ((u8*) &codelist) + 2, 2);
 					DCFlushRange((void*)0x80001800,codehandler_size);
 					break;
-					
+
 				case 2:
 					memset((void*)0x80001800,0,codehandler_size);
 					memcpy((void*)0x80001800,codehandler,codehandler_size);
@@ -922,7 +921,7 @@ void load_handler()
 		}
 		// Load multidol handler
 		memset((void*)0x80001000,0,multidol_size);
-		memcpy((void*)0x80001000,multidol,multidol_size); 
+		memcpy((void*)0x80001000,multidol,multidol_size);
 		DCFlushRange((void*)0x80001000,multidol_size);
 		switch(config_bytes[2])
 		{
@@ -994,7 +993,7 @@ u32 dvd_switchios()
 	int i = 0;
 	FILE *fp = NULL;
 	void *maindolend = 0x80000000;
-	
+
 	app_y_screen = 115;
 
 	app_thread_state = 1;	// setting up drive text
@@ -1003,16 +1002,16 @@ u32 dvd_switchios()
 	dvddone = 0;
 	ret = DVDLowReset(__dvd_readidcb);
 	while(ret>=0 && dvddone==0);
-	
+
 	memset((char*)0x80000000, 0, 0x20);
-	
+
 	// Get the ID
 	dvddone = 0;
 	ret = DVDLowReadID(g_diskID,__dvd_readidcb);
 	while(ret>=0 && dvddone==0);
 
 	memset(gameidbuffer, 0, 8);
-	memcpy(gameidbuffer, (char*)0x80000000, 6);	
+	memcpy(gameidbuffer, (char*)0x80000000, 6);
 
 	if(gameidbuffer[1] == 0 && gameidbuffer[2] == 0 && gameidbuffer[3] == 0 && gameidbuffer[4] == 0 && gameidbuffer[5] == 0 && gameidbuffer[6] == 0){
 		app_thread_state = 2;	// Reading DVD Stats
@@ -1054,7 +1053,7 @@ u32 dvd_switchios()
 
 	dvddone = 0;
 	__dvd_Tmd = (u32*)_gameTmdBuffer;
-	 		
+
 	ret = DVDLowOpenPartition(__dvd_bootGameInfo->offset,NULL,0,NULL,(void*)_gameTmdBuffer,__dvd_readidcb);
 	while(ret>=0 && dvddone==0);
 
@@ -1071,26 +1070,26 @@ u32 dvd_switchios()
 	vipatchon = 0;
 	applyfwritepatch = 0;
 	dumpmaindol = 0;
-	
+
 	if (config_bytes[7] == 0x00)
 		codelist = (u8 *) 0x800022A8;
 	else
 		codelist = (u8 *) 0x800028B8;
-	
+
 	// Need to load patch to high mem but not apply
-	if(sd_found == 1 && config_bytes[3] == 0x01){		
+	if(sd_found == 1 && config_bytes[3] == 0x01){
 		app_dopatch(gameidbuffer);
 	}
-	
+
 	app_loadgameconfig(gameidbuffer);
-	
+
 	// Need to load codes to high mem but not apply
 	if(sd_found == 1 && config_bytes[4] == 0x01){
 		app_copycodes(gameidbuffer);
 	}
-	
+
 	WPAD_Shutdown();
-	
+
 	if ((IOS_GetVersion() == dvdios || !willswitchios || diagcreate || dumpmaindol) && dvdios != 249)
 		app_thread_state = 5;
 	else
@@ -1101,52 +1100,52 @@ u32 dvd_switchios()
 		if(ret < 0){
 			i = 0;
 			__dvd_bootGameInfo = NULL;
-			
+
 			while(i<__dvd_gameToc->bootInfoCnt) {
 				if(__dvd_partInfo[i].len==1) {	// 1 for update partition
 					__dvd_bootGameInfo = &__dvd_partInfo[i];
 				}
 				i++;
 			}
-			
+
 			if (__dvd_bootGameInfo == NULL)
 				goto returntomenu;
-			
+
 			dvddone = 0;
 			__dvd_Tmd = (u32*)_gameTmdBuffer;
 			ret = DVDLowOpenPartition(__dvd_bootGameInfo->offset,NULL,0,NULL,(void*)_gameTmdBuffer,__dvd_readidcb);
 			while(ret>=0 && dvddone==0);
-			
+
 			dvddone = 0;
 			ret = DVDLowRead(buffer,0x20,0x2440/4,__dvd_readidcb);
 			while(ret>=0 && dvddone==0);
 			DCFlushRange(buffer, 0x20);
-			
+
 			dvddone = 0;
 			ret = DVDLowRead((void*)0x81200000,((*(u32*)(buffer + 0x14)) + 31) & ~31,0x2460/4,__dvd_readidcb);
 			while(ret>=0 && dvddone==0);
-			
+
 			app_entry = (void (*)(void(**)(void (*)(const char*, ...)), int (**)(), void *(**)()))(*(u32*)(buffer + 0x10));
 			app_entry(&app_init, &app_main, &app_final);
 			app_init((void (*)(const char*, ...))nothing);
-			
+
 			while (1)
 			{
 				void* dst = 0;
 				int len = 0,offset = 0;
 				int res = app_main(&dst, &len, &offset);
-				
+
 				if (!res){
 					break;
 				}
-				
+
 				dvddone = 0;
 				ret = DVDLowRead(dst,len,offset/4<<2,__dvd_readidcb);
 				while(ret>=0 && dvddone==0);
 				DCFlushRange(dst, len);
-				
+
 			}
-			
+
 			sprintf(searchIOS,"IOS%u-",dvdios);
 			ioswad = fst_find_wad(*(u32*)0x80000038, searchIOS);
 		returntomenu:
@@ -1162,20 +1161,20 @@ u32 dvd_switchios()
 			app_thread_state = 4;	// Reading DVD Stats
 			while(1);
 		}
-		
+
 		app_thread_state = 5;	// Reading DVD Stats
-		
+
 		ret = DVDLowInit();
-		
+
 		memset((char*)0x80000000, 0, 6);
-		
+
 		dvddone = 0;
 		ret = DVDLowReadID(g_diskID,__dvd_readidcb);
 		while(ret>=0 && dvddone==0);
-		
+
 		memset(gameidbuffer, 0, 8);
 		memcpy(gameidbuffer, (char*)0x80000000, 6);
-		
+
 		if(gameidbuffer[1] == 0 && gameidbuffer[2] == 0 && gameidbuffer[3] == 0 && gameidbuffer[4] == 0 && gameidbuffer[5] == 0 && gameidbuffer[6] == 0){
 			app_thread_state = 12;	// Reading DVD Stats
 			codes_state = 0;
@@ -1205,7 +1204,7 @@ u32 dvd_switchios()
 
 	dvddone = 0;
 	__dvd_Tmd = (u32*)_gameTmdBuffer;
-	 		
+
 	ret = DVDLowOpenPartition(__dvd_bootGameInfo->offset,NULL,0,NULL,(void*)_gameTmdBuffer,__dvd_readidcb);
 	while(ret>=0 && dvddone==0);
 
@@ -1223,19 +1222,19 @@ u32 dvd_switchios()
 	app_init((void (*)(const char*, ...))nothing);
 
 	settime(secs_to_ticks(time(NULL) - 946684800));
-	
+
 	if (dumpmaindol)
 	{
 		sprintf(filepath, "sd:/%s_dol.bin", gameidbuffer);
 		fp = fopen(filepath, "w+");
 	}
-	
+
 	while (1)
 	{
 		void* dst = 0;
 		int len = 0,offset = 0;
 		int res = app_main(&dst, &len, &offset);
-		
+
 		if (!res){
 			break;
 		}
@@ -1244,7 +1243,7 @@ u32 dvd_switchios()
 		ret = DVDLowRead(dst,len,offset/4<<2,__dvd_readidcb);
 		while(ret>=0 && dvddone==0);
 		DCFlushRange(dst, len);
-		
+
 		if (fp && dst >= 0x80000000 && dst <= 0x80dfff00)
 			if (maindolend < (dst + len))
 				maindolend = (void *) (dst + len);
@@ -1253,17 +1252,17 @@ u32 dvd_switchios()
 		if(vipatchon){
 			vidolpatcher(dst,len);
 		}
-		
+
 		// fwrite Patch
 		if (applyfwritepatch){
 			patchdebug(dst,len);
 		}
-		
+
 		// Language
 		if(config_bytes[0] != 0xCD){
 			langpatcher(dst,len);
 		}
-		
+
 		// Hooks
 		if(config_bytes[2] != 0x00){
 			dogamehooks(dst,len);
@@ -1271,15 +1270,15 @@ u32 dvd_switchios()
 
 		DCFlushRange(dst, len);
 	}
-	
+
 	load_handler();
 	app_pokevalues();
 
 	// Do SD patch if sd card and enabled
-	if(sd_found == 1 &&config_bytes[3] == 0x01){		
+	if(sd_found == 1 &&config_bytes[3] == 0x01){
 		app_apply_patch();
 	}
-	
+
 	if (diagcreate)
 	{
 		app_writediag((void *) app_init, (void *) app_main, (void *) app_final, (void *) app_entry);
@@ -1289,7 +1288,7 @@ u32 dvd_switchios()
 			STM_RebootSystem();
 		}
 	}
-	
+
 	if (fp)
 	{
 		fwrite((void *) 0x80000000, ((u32) maindolend) - 0x80000000, 1, fp);
@@ -1300,7 +1299,7 @@ u32 dvd_switchios()
 
 	set_default_vidmode();
 	process_config_vidmode();
-	
+
 	if (progmode)
 		rmode = &TVNtsc480Prog;
 
@@ -1317,35 +1316,35 @@ u32 dvd_switchios()
 
 		case 0x01:
 			write32(0x80002784, 1);
-		break;		
+		break;
 	} */
 
 	u32 arealow = *(u32*)0x80000034;
 	u32 areahigh = *(u32*)0x80000038;
 	u32 maxfst = *(u32*)0x8000003c;
 	u32 bi2 = *(u32*)0x800000f4;
-	
+
 	*(u32*)0x80000020 = 0xD15EA5E;		// Boot from DVD
 	*(u32*)0x80000024 = 1; 				// Version
 	*(u32*)0x80000030 = 0; 				// Arena Low
 	*(u32*)0x80000034 = arealow;		// Arena High - get from DVD
 	*(u32*)0x80000038 = areahigh;		// FST Start - get from DVD
 	*(u32*)0x8000003C = maxfst;			// Max FST size - get from DVD
-	
+
 	*(u32*)0x800000EC = 0x81800000;		// Dev Debugger Monitor Address
 	*(u32*)0x800000F0 = 0x01800000;		// Dev Debugger Monitor Address
 	*(u32*)0x800000F4 = bi2;			// BI2
 	*(u32*)0x800000F8 = 0x0E7BE2C0;		// Console Bus Speed
 	*(u32*)0x800000FC = 0x2B73A840;		// Console CPU Speed
-	
+
 	if (fakeiosversion)
 		*(u16*)0x80003142 = 0xFFFF;
 
 	memcpy((void*)0x80001800, (char*)0x80000000, 6);	// For WiiRD
 	memcpy((void*)0x80003180, (char*)0x80000000, 4);	// online check code, seems offline games clear it?
-	
+
 	DCFlushRange((void*)0x80000000, 0x3f00);
-		
+
 	appentrypoint = app_final();
 	app_thread_state = 8;	// shut down
 
